@@ -22,7 +22,7 @@ spec:
       containers:
         - name: bart-service
           image: bart-service:latest
-          imagePullPolicy: Never   # use local minikube image, don't pull from Docker Hub
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
@@ -34,6 +34,17 @@ spec:
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: OTEL_SERVICE_NAME
+              value: "bart-service"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector:4318"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "none"
+          volumeMounts:
+            - name: log-volume
+              mountPath: /var/log/bart-service
           readinessProbe:
             tcpSocket:
               port: 8080
@@ -44,6 +55,22 @@ spec:
               port: 8080
             initialDelaySeconds: 60
             periodSeconds: 20
+
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:8.13.0
+          args: ["-c", "/etc/filebeat/filebeat.yml", "-e"]
+          volumeMounts:
+            - name: log-volume
+              mountPath: /var/log/bart-service
+            - name: filebeat-config
+              mountPath: /etc/filebeat
+
+      volumes:
+        - name: log-volume
+          emptyDir: {}
+        - name: filebeat-config
+          configMap:
+            name: filebeat-config
 ---
 apiVersion: v1
 kind: Service
@@ -52,7 +79,7 @@ metadata:
 spec:
   selector:
     app: bart-service
-  type: NodePort         # exposes it so we can curl from outside the cluster
+  type: NodePort
   ports:
     - port: 8080
       targetPort: 8080
