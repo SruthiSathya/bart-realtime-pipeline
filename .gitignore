@@ -1,0 +1,14 @@
+cat > .gitignore << 'EOF'
+# Java
+target/
+*.class
+*.jar
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Mac
+.DS_Store
+EOF

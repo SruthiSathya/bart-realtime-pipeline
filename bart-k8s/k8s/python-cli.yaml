@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-cli
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-cli
+  template:
+    metadata:
+      labels:
+        app: python-cli
+    spec:
+      containers:
+        - name: python-cli
+          image: bart-python-cli:latest
+          imagePullPolicy: Never   # use local minikube image
+          env:
+            - name: SPRING_BOOT_URL
+              value: "http://bart-service:8080/api/bart/events"

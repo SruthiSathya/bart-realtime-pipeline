@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+
+  # Spring Boot — receives BART events from Python CLI
+  bart-service:
+    build: ./spring-boot-service
+    ports:
+      - "8080:8080"         # localhost:8080 → container:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - bart-network
+
+  # Python CLI — sends BART events to Spring Boot
+  python-cli:
+    build: ./python-cli
+    environment:
+      - SPRING_BOOT_URL=http://bart-service:8080/api/bart/events
+    depends_on:
+      - bart-service        # wait for Spring Boot to start first
+    networks:
+      - bart-network
+
+networks:
+  bart-network:
+    driver: bridge
