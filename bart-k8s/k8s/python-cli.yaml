@@ -12,6 +12,10 @@ spec:
       labels:
         app: python-cli
     spec:
+      initContainers:
+        - name: wait-for-bart-service
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z bart-service 8080; do echo waiting for bart-service; sleep 2; done']
       containers:
         - name: python-cli
           image: bart-python-cli:latest

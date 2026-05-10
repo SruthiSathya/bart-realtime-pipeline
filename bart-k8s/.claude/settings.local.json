@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x *)",
+      "Bash(rm /Users/diivanand/Repos/bart-realtime-pipeline/docker-compose.yml)",
+      "Bash(echo \"grep exit: $?\")"
+    ]
+  }
+}

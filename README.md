@@ -69,11 +69,13 @@ bart-realtime-pipeline/
   │     │     └── application.properties
   │     ├── pom.xml
   │     └── Dockerfile
-  ├── k8s/
-  │     ├── kafka.yaml
-  │     ├── redis.yaml
-  │     ├── spring-boot.yaml
-  │     └── python-cli.yaml
+  ├── bart-k8s/
+  │     ├── deploy.sh                # One-command minikube deploy
+  │     └── k8s/
+  │           ├── kafka.yaml
+  │           ├── redis.yaml
+  │           ├── spring-boot.yaml
+  │           └── python-cli.yaml
   └── README.md
 ```
 
@@ -96,25 +98,27 @@ Make sure you have these installed:
 
 ## Option 1 — Run on Kubernetes (minikube)
 
-### 1. Start minikube
+### Quick start (one command)
+```bash
+./bart-k8s/deploy.sh
+```
+
+This starts minikube if needed, builds both Docker images inside minikube's daemon, applies all manifests, waits for every deployment to roll out, and prints the service URL.
+
+### Manual steps (if you prefer step-by-step)
+
+#### 1. Start minikube
 ```bash
 minikube start
 ```
 
-### 2. Point Docker to minikube
+#### 2. Point Docker to minikube
 ```bash
 eval $(minikube docker-env)
 ```
 > ⚠️ Run this in every terminal tab you use. It only applies to the current tab.
 
-### 3. Build the Spring Boot jar
-```bash
-cd spring-boot-service
-mvn clean package -DskipTests
-cd ..
-```
-
-### 4. Build Docker images inside minikube
+#### 3. Build Docker images inside minikube
 ```bash
 docker build -t bart-service:latest ./spring-boot-service
 docker build -t bart-python-cli:latest ./python-cli
@@ -125,15 +129,12 @@ Verify both images exist:
 docker images | grep bart
 ```
 
-### 5. Deploy everything
+#### 4. Deploy everything
 ```bash
-kubectl apply -f k8s/redis.yaml
-kubectl apply -f k8s/kafka.yaml
-kubectl apply -f k8s/spring-boot.yaml
-kubectl apply -f k8s/python-cli.yaml
+kubectl apply -f bart-k8s/k8s/
 ```
 
-### 6. Wait for all pods to be Running
+#### 5. Wait for all pods to be Running
 ```bash
 kubectl get pods -w
 ```
@@ -147,14 +148,14 @@ python-cli-xxx                  1/1     Running   0          20s
 redis-xxx                       1/1     Running   0          40s
 ```
 
-### 7. Open the tunnel (keep this terminal open)
+#### 6. Open the tunnel (keep this terminal open)
 ```bash
 minikube service bart-service --url
 ```
 
 Copy the URL (e.g. `http://127.0.0.1:50773`)
 
-### 8. Test it
+### Test it
 ```bash
 # Health check
 curl http://127.0.0.1:50773/api/bart/health
@@ -261,7 +262,7 @@ kubectl top pods
 kubectl exec -it deployment/bart-service -- sh
 
 # Delete everything
-kubectl delete -f k8s/
+kubectl delete -f bart-k8s/k8s/
 ```
 
 ---
